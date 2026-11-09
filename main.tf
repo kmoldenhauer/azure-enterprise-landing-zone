@@ -44,3 +44,15 @@ module "networking" {
   location      = var.location
   tags          = var.tags
 }
+# -----------------------------------------------------------------------------
+# IDENTITY & KEY VAULT MODULE INSTANTIATION
+# -----------------------------------------------------------------------------
+module "identity" {
+  source = "./modules/identity"
+
+  resource_group_name = azurerm_resource_group.spoke.name
+  location            = var.location
+  project_name        = var.project_name
+  environment         = var.environment
+  tags                = var.tags
+}
