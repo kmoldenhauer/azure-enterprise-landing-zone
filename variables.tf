@@ -20,8 +20,8 @@ variable "tags" {
   type        = map(string)
   description = "Standard resource tags for governance and cost management."
   default = {
-    Project    = "Azure-Landing-Zone"
-    ManagedBy  = "Terraform"
-    AZ104_Lab  = "True"
+    Project   = "Azure-Landing-Zone"
+    ManagedBy = "Terraform"
+    AZ104_Lab = "True"
   }
 }
