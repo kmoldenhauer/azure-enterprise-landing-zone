@@ -55,3 +55,32 @@ resource "azurerm_virtual_network_peering" "spoke_to_hub" {
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
 }
+
+# -----------------------------------------------------------------------------
+# NETWORK SECURITY GROUP (NSG) FOR SPOKE WORKLOADS
+# -----------------------------------------------------------------------------
+resource "azurerm_network_security_group" "workload" {
+  name                = "nsg-workload-${var.location}"
+  location            = var.location
+  resource_group_name = var.spoke_rg_name
+  tags                = var.tags
+
+  # Rule: Allow HTTPS (Port 443) ONLY from the Hub VNet IP range
+  security_rule {
+    name                       = "Allow-HTTPS-From-Hub"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = var.hub_vnet_cidr
+    destination_address_prefix = "*"
+  }
+}
+
+# Associate the NSG directly to the Workload Subnet
+resource "azurerm_subnet_network_security_group_association" "workload" {
+  subnet_id                 = azurerm_subnet.workload.id
+  network_security_group_id = azurerm_network_security_group.workload.id
+}

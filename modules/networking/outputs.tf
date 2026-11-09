@@ -12,3 +12,8 @@ output "workload_subnet_id" {
   value       = azurerm_subnet.workload.id
   description = "The Resource ID of the Workload Subnet."
 }
+
+output "workload_nsg_id" {
+  value       = azurerm_network_security_group.workload.id
+  description = "The Resource ID of the Workload Network Security Group."
+}
