@@ -14,6 +14,37 @@ The infrastructure implements a classic **Hub-and-Spoke topology**:
 * **Network Security Group (NSG):** Enforces Zero Trust boundary on workload subnets, permitting inbound HTTPS (`Port 443`) exclusively from the Hub VNet.
 * **Identity & Key Vault:** Centralized Azure Key Vault (`kv-alz-dev-*`) configured with dynamic suffix generation and tenant-scoped Access Policies for secrets management.
 
+               +-------------------------------------------------------+
+               |                  AZURE SUBSCRIPTION                   |
+               +-------------------------------------------------------+
+                                           |
+                   +-----------------------+-----------------------+
+                   |                                               |
+        +-----------------------+                       +-----------------------+
+        | Hub Resource Group    |                       | Spoke Resource Group  |
+        | (rg-alz-hub-dev-eastus)|                       | (rg-alz-spoke-dev-eastus)|
+        +-----------------------+                       +-----------------------+
+                   |                                               |
+        +-----------------------+     VNet Peering      +-----------------------+
+        |  Hub Virtual Network  |<=====================>| Spoke Virtual Network |
+        |      (vnet-hub)       |   (Bidirectional)     |     (vnet-spoke)      |
+        |     10.0.0.0/16       |                       |      10.1.0.0/16      |
+        +-----------------------+                       +-----------------------+
+                   |                                               |
+                   |                                    +----------+----------+
+        +-----------------------+                       |                     |
+        | Azure Firewall Subnet |            +--------------------+  +--------------------+
+        | (AzureFirewallSubnet) |            |   Workload Subnet  |  |  Azure Key Vault   |
+        |     10.0.1.0/24       |            |   (snet-workload)  |  |   (kv-alz-dev-*)   |
+        +-----------------------+            |     10.1.1.0/24    |  +--------------------+
+                                             +--------------------+
+                                                       |
+                                            +--------------------+
+                                            | Network Sec Group  |
+                                            | (nsg-workload-eastus)|
+                                            | Allow 443 from Hub |
+                                            +--------------------+
+
 ---
 
 ## 📁 Repository Structure
