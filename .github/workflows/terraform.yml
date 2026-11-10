@@ -1,0 +1,59 @@
+name: "Terraform Azure Landing Zone CI/CD"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Required permissions for OIDC token exchange with Azure
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    name: "Validate & Deploy Infrastructure"
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Clone the repository onto the GitHub runner
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Authenticate to Azure using OIDC (No stored passwords)
+      - name: Azure Login via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Step 3: Install the Terraform CLI on the runner
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0"
+
+      # Step 4: Initialize modules & providers
+      - name: Terraform Init
+        run: terraform init
+
+      # Step 5: Verify code formatting
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      # Step 6: Validate syntax & logic
+      - name: Terraform Validate
+        run: terraform validate
+
+      # Step 7: Run Execution Plan (runs on both PRs and direct pushes)
+      - name: Terraform Plan
+        run: terraform plan -var-file="environments/dev.tfvars"
+
+      # Step 8: Apply changes (ONLY runs when merged directly into main branch)
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -var-file="environments/dev.tfvars" -auto-approve
